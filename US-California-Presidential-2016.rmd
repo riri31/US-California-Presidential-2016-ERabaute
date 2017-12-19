@@ -1,10 +1,11 @@
 ---
 title: "US Presidential 2016 - California"
-
 output:
   html_document:
-    toc: true
     theme: united
+    toc: yes
+  pdf_document:
+    toc: yes
 ---
 
 by E. Rabaute 
@@ -153,13 +154,13 @@ ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_
 
 The most interesting information we can get from this box plot are:
 
-* Mr Rubio contributors seem to spend the more money than other candidates 
-* Mrs Clinton contributors seem to spend the less money than other candidates 
+* Mr Rubio contributors seem to spend more money than other candidates 
+* Mrs Clinton contributors seem to spend less money than other candidates 
 
 What could we assume about that observations:
 
-* Are Mrs clinton's contributors  the poorest in comparison with other canditates? 
-* Are Mrs Clinton's contibutords the less committed in comparison with other canditates? 
+* Are Mrs clinton's contributors  poorer than for other canditates? 
+* Are Mrs Clinton's contibutors less committed than for other canditates? 
 
 To answer this questions, we should have other informations like:
 
@@ -208,25 +209,24 @@ ggplot(data = subset(data_campaign,!is.na(cand_nm) & contb_receipt_amt>0 & (cand
 
 #### a) Evolution of donations for main candiates vs election time line
 
-In the next chart, can superpose the amount of donations all along the election. 
+In the next chart, we can superpose the amount of donations all along the election. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # Display a line plot for contributions amount for main candidates
 ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"), y=contb_receipt_amt))+
-  geom_line(bstat='identity',show.legend = FALSE, aes(color=cand_nm))+
-  scale_y_continuous(limits = c(0,3000))+
+  geom_bar(stat='identity',show.legend = FALSE, aes(color=cand_nm))+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
   scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-05-15'), dmy('01-12-16')))+
   geom_vline(xintercept = dmy(elections_dates), show.legend = T)+
-  facet_wrap(~ cand_nm, ncol = 1)
+  facet_wrap(~ cand_nm, ncol = 1, scale='free_y')
 ```
 
 We can see that we have a clear correlation between donations and some milestone of the elections. 
 
 For instance, Mr Sanders donations lowered after his capaign stop and completely vanished after Democrats convention. 
 
-Another example is Mr Cruz with a clear stop of donations after his renonciation announcement. 
+Another example is Mr Cruz with a clear stop of donations after his renonciation announcement.
 
 #### b) Evolution of donations for finalists vs election time line
 
@@ -237,11 +237,10 @@ The same plot focused for finalists that confirm last analysis.
 # Same line plot for both finalists
 ggplot(data = subset(data_campaign,cand_nm %in% finalists & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"), y=contb_receipt_amt))+
   geom_bar(stat='identity',aes(color=cand_nm, fill=cand_nm))+
-  scale_y_continuous(limits = c(0, NA))+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
   scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-04-15'), c(dmy('01-12-16'))))+
   geom_vline(xintercept = dmy(elections_dates))+
-  facet_wrap(~cand_nm, ncol = 1)
+  facet_wrap(~cand_nm, ncol = 1, scale='free_y')
 
 ```
 
@@ -354,8 +353,8 @@ ggplot(subset(data_campaign.bycity, cand_nm %in% finalists & contbr_city %in% to
 
 We can notice that: 
 
-* Bigger are the city more conteibutors we have that is normal
-* On the other hand, we can notice that San Diego, San jose and Fresno are over reprsented in Mr Trump contributors
+* Bigger are the city more contributors we have. That is normal.
+* On the other hand, we can notice that San Diego, San jose and Fresno are over represented in Mr Trump contributors
 * In opposite way, Los Angeles and San Francisco are under represented (inn comparison with city populations)
 * For Mrs Clinton, Biggest city as Los Angeles and San Franciso represents the main part of contributors. Oakland is big provider as well
 
