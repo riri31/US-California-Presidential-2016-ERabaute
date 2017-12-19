@@ -1,0 +1,443 @@
+---
+title: "US Presidential 2016 - California"
+
+output:
+  html_document:
+    toc: true
+    theme: united
+---
+
+by E. Rabaute 
+
+
+
+### I) Objectives
+
+The objective of this analysis is to provide valuable information about 2016 US presidential campaign donation using data analysis methods and tools.
+
+RStudio will be used for data wrangling, and data explonary analysis.
+
+This project is the last task validating Udacity explonary analysis MOOC.
+
+### II) Data analysed
+
+The data used for this analysis is a csv file downloaded from http://classic.fec.gov/  related from campaign Finance in Calfornia state.
+
+Data size: ~250 MB
+Type: CSV file (comma separation)
+
+Rows:  1 304 346
+
+In order to accelerate computation for exploratory analysis, I'd sample all the data around 10%. Then, once all code and plots were generated, I computed all data.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(RColorBrewer)
+
+#Import data from CSV
+data_campaign <- read.csv('P00000001-CA.csv',sep = ",",header = T,row.names = NULL)
+#Data wrangling
+#data_campaign<-data_campaign[sample(1:nrow(data_campaign), 130000,replace=FALSE),] 
+names(data_campaign) <- names(data_campaign)[-1]
+data_campaign<-data_campaign[0:18]
+
+#List of collumns
+names(data_campaign)
+
+#Subset the final candidates
+finalists<-c('Clinton, Hillary Rodham','Trump, Donald J.')
+
+#Subset the main candidates
+main_candidates<- c(finalists, c("Cruz, Rafael Edward 'Ted'","Rubio, Marco","Sanders, Bernard"))
+
+#Highlight some election dates
+#'08-11-16': General US presidential elections
+#'28-07-16': Democrats convention
+#'18-07-16': Republicans convention
+#'3-05-16': Mr Sanders stop
+#'15-03-16' : Mr Rubio stop
+
+elections_dates<- c('08-11-16','28-07-16','18-07-16','3-05-16','15-03-16')
+
+```
+
+### III) First observations
+
+#### a) Number of donators for each candidate
+
+The first step is to assess the number of donators for each candidates.
+
+The Y axis is in log10 scale as there is a huge difference between all candidates (Mr Gilmore vs Mrs Clinton)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+table(data_campaign$cand_nm)
+
+
+ggplot(data = subset(data_campaign,!is.na(cand_nm)), aes(x=cand_nm))+
+  geom_bar(aes(fill=cand_nm), size=1, show.legend = F)+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_y_log10()
+  
+```
+
+The most interesting information we can get from this plot are:
+
+* Huge difference between candidates (Mr Gilmore vs Mrs Clinton) 
+* The relative low count of donations for Mr Trump (that was confirmed by a low score in popular vote: 32% vs 62% for Mrs Clinton ) that confirms that California was a "democrat"" state 
+
+
+#### b) Amount of donations for each candidate
+
+The next step is to assess the amount and no more the count of donations for each candidates.
+
+The next scatter plot shows all donations for each candidats all along the campaign with the amount as Y axis.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(lubridate)
+
+ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"),y=contb_receipt_amt))+
+  geom_jitter(alpha=1/4, position = 'identity', aes(color=cand_nm), shape=19)+
+  scale_y_continuous(limits = c(0, 300))+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-04-15'), NA))+
+  geom_vline(xintercept = dmy(elections_dates), show.legend = T)
+```
+Elections time line:
+
+* 08-11-16: General US presidential elections, 
+* 28-07-16: Democrats convention,
+* 18-07-16: Republicans convention,
+* 3-05-16: Mr Sanders stop,
+* 15-03-16 : Mr Rubio stop
+
+
+
+The most interesting information we can get from this plot are:
+
+* The different steps (straight lines) corresponding to certain rounded values 
+  + 10, 25, 50, 75, 100, 150, 200, 250, 300 
+* The main colors depending on the date 
+  + Mr Sanders from Oct. 15 to August 15, Mrs Clinton from Democrat convention to Election date and Mr trump at the very last stage of the campaign (ie.: after the general elections) 
+
+On the next plot, I focused on the total amount of donations for the main candidates. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = subset(data_campaign,(cand_nm %in% main_candidates ) & contb_receipt_amt>1 & !is.na(contb_receipt_amt)), aes(x=cand_nm,y=contb_receipt_amt))+
+  geom_bar(stat='identity',aes(fill=cand_nm), size=1)+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_y_continuous()
+
+```
+
+The most interesting information we can get from this plot are:
+
+* As for the count of donations, the total amount is far greater for Mrs Clinto than others 
+* Low score for Mr Trump (lower than Mr Sanders) despite being elected in national elections at the end 
+
+#### b) Amount of donations percontributors for main candidates
+
+in the next plot, we can see the distribution of donation amounts for main candidates. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=cand_nm, y=contb_receipt_amt))+
+  geom_boxplot(aes(fill=cand_nm))+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_y_continuous(limits = c(0, 150))
+
+
+```
+
+The most interesting information we can get from this box plot are:
+
+* Mr Rubio contributors seem to spend the more money than other candidates 
+* Mrs Clinton contributors seem to spend the less money than other candidates 
+
+What could we assume about that observations:
+
+* Are Mrs clinton's contributors  the poorest in comparison with other canditates? 
+* Are Mrs Clinton's contibutords the less committed in comparison with other canditates? 
+
+To answer this questions, we should have other informations like:
+
+* Revenue of contributors 
+* % satisfaction about the candidate for each contributors 
+
+#### c) Focus on finalists 
+
+The next table shows for both finalists the total sum and count of donations. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library (data.table)
+
+# Create a data frame with count and sum of contrbutions for both finalists
+donations_DT <- matrix(c(
+  sum(subset(data_campaign,cand_nm==finalists[1])$contb_receipt_amt),
+  length(subset(data_campaign,cand_nm==finalists[1])$contb_receipt_amt),
+  sum(subset(data_campaign,cand_nm==finalists[2])$contb_receipt_amt),
+  length(subset(data_campaign,cand_nm==finalists[2])$contb_receipt_amt)
+  ),
+  ncol=2,
+  byrow=TRUE)
+colnames(donations_DT) <- c("Sum", "n")
+rownames(donations_DT) <- c('Clinton, Hillary Rodham','Trump, Donald J.')
+donations_DT <- as.table(donations_DT)
+
+# Display the data frame
+donations_DT
+
+```
+
+We have a confirmation that Mrs Clinton receive much more money for her contributors. 
+
+The next box plot confirms that mean donations are higher for Mr Trump than Mrs Clinton. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Display a scatter plot for contributions amount for both finalists
+ggplot(data = subset(data_campaign,!is.na(cand_nm) & contb_receipt_amt>0 & (cand_nm == 'Trump, Donald J.' | cand_nm == 'Clinton, Hillary Rodham')), aes(x=cand_nm, y=contb_receipt_amt))+
+  geom_boxplot(aes(fill=cand_nm))+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_y_continuous(limits = c(0, 100))
+```
+
+### IV) Final Plots and Summary
+
+
+#### a) Evolution of donations for main candiates vs election time line
+
+In the next chart, can superpose the amount of donations all along the election. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# Display a line plot for contributions amount for main candidates
+ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"), y=contb_receipt_amt))+
+  geom_line(bstat='identity',show.legend = FALSE, aes(color=cand_nm))+
+  scale_y_continuous(limits = c(0,3000))+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-05-15'), dmy('01-12-16')))+
+  geom_vline(xintercept = dmy(elections_dates), show.legend = T)+
+  facet_wrap(~ cand_nm, ncol = 1)
+```
+
+We can see that we have a clear correlation between donations and some milestone of the elections. 
+
+For instance, Mr Sanders donations lowered after his capaign stop and completely vanished after Democrats convention. 
+
+Another example is Mr Cruz with a clear stop of donations after his renonciation announcement. 
+
+#### b) Evolution of donations for finalists vs election time line
+
+The same plot focused for finalists that confirm last analysis. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# Same line plot for both finalists
+ggplot(data = subset(data_campaign,cand_nm %in% finalists & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"), y=contb_receipt_amt))+
+  geom_bar(stat='identity',aes(color=cand_nm, fill=cand_nm))+
+  scale_y_continuous(limits = c(0, NA))+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-04-15'), c(dmy('01-12-16'))))+
+  geom_vline(xintercept = dmy(elections_dates))+
+  facet_wrap(~cand_nm, ncol = 1)
+
+```
+
+#### c) Contributor occupation for finalists
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+
+# Create dataframe for finalists grouped by candidates and occupation
+data_campaign.bycategory<- subset(data_campaign,cand_nm %in% finalists)  %>%
+  group_by(cand_nm, contbr_occupation) %>%
+  summarise(sum=sum(contb_receipt_amt),
+            n=n()) %>%
+  arrange(-n)
+
+# Select TOP 13 of occupations
+top_category<-head(subset(data_campaign.bycategory, cand_nm %in% finalists), n=13L)$contbr_occupation
+
+# Remove outliers
+top_category<- top_category[top_category!="INFORMATION REQUESTED"]
+top_category<- top_category[top_category!=""]
+top_category<- top_category[!is.na(top_category)]
+
+# Change occupation to 'OTHER' if not part of TOP 13
+data_campaign.bycategory<-transform(data_campaign.bycategory, contbr_occupation_new= ifelse(contbr_occupation %in% top_category,as.character(contbr_occupation),as.character('OTHER')))
+
+# Compute ratio field in the new data frame
+data_campaign.bycategory<-transform(data_campaign.bycategory, ratio= ifelse(cand_nm=='Clinton, Hillary Rodham', n/donations_DT['Clinton, Hillary Rodham', 'n'], n/donations_DT['Trump, Donald J.', 'n']))
+
+# Plot ratio of contributions for both finalits
+ggplot(subset(data_campaign.bycategory, cand_nm %in% finalists), aes(x="", y=ratio, fill=contbr_occupation_new))+
+  geom_bar(width = 1, stat = "identity")+
+  facet_wrap(~cand_nm, ncol = 2)+
+  scale_color_brewer(type = 'div',
+                     guide = guide_legend(title = 'contbr_occupation', reverse = T,
+                                          override.aes = list(alpha = 1, size = 1)))
+
+```
+
+We can see there are:
+
+* More retired people donating for Mr Trump than for Mrs Clinton 
+* More attorney, consutant, engineer, writer and teachers donating for Mrs Clinton than Mr Trump 
+
+The same information is displayed in the following plot. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# Display occupation for finalists donators.
+ggplot(subset(data_campaign.bycategory, cand_nm %in% finalists), aes(x=contbr_occupation_new, y=ratio))+
+  geom_bar(width = 1, stat = "identity",  aes(fill=contbr_occupation_new), show.legend = F)+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  facet_wrap(~cand_nm, ncol = 1, scale='free_y')
+
+```
+
+I propose to highlight the top 10 for both finalists.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# TOP 10 contributors occupation for Clinton
+TOP10_CLINTON <- head(subset(data_campaign.bycategory, cand_nm=='Clinton, Hillary Rodham'), n=11L)$contbr_occupation
+# remove outlier
+TOP10_CLINTON<-TOP10_CLINTON[TOP10_CLINTON!="INFORMATION REQUESTED"]
+
+# TOP 10 contributors occupation for Clinton
+TOP10_TRUMP <- head(subset(data_campaign.bycategory, cand_nm=='Trump, Donald J.'), n=11L)$contbr_occupation
+# remove outlier
+TOP10_TRUMP<-TOP10_TRUMP[TOP10_TRUMP!="INFORMATION REQUESTED"]
+
+# TOP 10 contributors occupation for both finalists
+TOP10_DT <- matrix(c(
+  as.character(TOP10_CLINTON),
+   as.character(TOP10_TRUMP)
+  ),
+  ncol=2)
+
+colnames(TOP10_DT) <- c("Clinton, Hillary Rodham", "Trump, Donald J.")
+rownames(TOP10_DT) <- c(seq(1,10,1))
+
+TOP10_DT
+```
+
+We can notice that:
+
+* Retired is the most common category for both candidates 
+* Teacher, homemaker, unenployed, professor, consultant and writer are not present in Mr Trump Top 10 whereas in the Mrs Clinton Top10
+
+#### d) Contributor city for finalists
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Create dataframe for finalists grouped by candidates and city
+data_campaign.bycity<- subset(data_campaign,cand_nm %in% finalists)  %>%
+  group_by(cand_nm, contbr_city) %>%
+  summarise(sum=sum(contb_receipt_amt),
+            n=n()) %>%
+  arrange(-n)
+
+# Select TOP 20 of occupations
+top_city<-head(subset(data_campaign.bycity, cand_nm %in% finalists), n=30L)$contbr_city
+
+# Display occupation for finalists donators.
+ggplot(subset(data_campaign.bycity, cand_nm %in% finalists & contbr_city %in% top_city), aes(x=contbr_city, y=n, fill=contbr_city))+
+  geom_bar(colour='black',  width = 1, stat = "identity",   show.legend = F)+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  facet_wrap(~cand_nm, ncol = 1, scales = "free_y")
+
+```
+
+We can notice that: 
+
+* Bigger are the city more conteibutors we have that is normal
+* On the other hand, we can notice that San Diego, San jose and Fresno are over reprsented in Mr Trump contributors
+* In opposite way, Los Angeles and San Francisco are under represented (inn comparison with city populations)
+* For Mrs Clinton, Biggest city as Los Angeles and San Franciso represents the main part of contributors. Oakland is big provider as well
+
+#### e) Contributor employer for finalists
+
+I propose to look at contribution distribution per employers.
+
+```{r echo=FALSE}
+
+# Create dataframe for finalists grouped by candidates and emplyers
+data_campaign.byemployer<- subset(data_campaign,cand_nm %in% finalists)  %>%
+  group_by(cand_nm, contbr_employer) %>%
+  summarise(sum=sum(contb_receipt_amt),
+            n=n()) %>%
+  arrange(-n)
+
+TOP_EMPLOYER<-head(subset(data_campaign.byemployer, cand_nm %in% finalists), n=30L)$contbr_employer
+OUTLIERS_EMPLOYER<-c('N/A','','RETIRED','DISABLED','HOMEMAKER','SELF-EMPLOYED','INFORMATION REQUESTED','NOT EMPLOYED','SELF EMPLOYED','NONE' )
+
+#Remove outliers
+TOP_EMPLOYER<-TOP_EMPLOYER[!TOP_EMPLOYER %in% OUTLIERS_EMPLOYER]
+
+# Display employers for finalists donators.
+ggplot(subset(data_campaign.byemployer, cand_nm %in% finalists & contbr_employer %in% TOP_EMPLOYER), aes(x=contbr_employer, y=n, fill=contbr_employer))+
+  geom_bar(colour='black',  width = 1, stat = "identity",   show.legend = F)+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  facet_wrap(~cand_nm, ncol = 1, scales = "free_y")
+
+
+```
+
+We can notice that:
+
+* State of California is one of biggest employer in California and so well represented for both finalists
+* On the other hand, GAFA (Google, Apple and Facebook) are mainly represented in Mrs Clinton contirbutions (see following plot)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+GAFA <-c('GOOGLE', 'FACEBOOK', 'APPLE INC.')
+
+# Display employers for finalists donators.
+
+Total_sum_GAFA_CLINTON<-sum(subset(data_campaign.byemployer, cand_nm== "Clinton, Hillary Rodham" & contbr_employer %in% GAFA )['sum'])
+Total_sum_GAFA_TRUMP<-sum(subset(data_campaign.byemployer, cand_nm== "Trump, Donald J." & contbr_employer %in% GAFA )['sum'])
+
+df <- data.frame(
+  Candidate = c("Clinton, Hillary Rodham", "Trump, Donald J."),
+  Sum = c(Total_sum_GAFA_CLINTON, Total_sum_GAFA_TRUMP)
+  )
+
+ggplot(df, aes(x="", y=Sum, fill=Candidate))+
+  geom_bar(width = 1, stat = "identity")+
+  coord_polar("y", start=0)
+  
+
+```
+
+We can in the previous chart that GAFA contributors are for Mrs Clinton at an excessive rate (>99%)
+
+#### f) Summary
+
+In this analysis, we have highligthed that:
+
+* Mrs Clinton contributors are overepresented in California state in general
+  + especially in GAFA employers, biggest cities (SF, LA) and some occupation like attorneys or teachers
+  + on the other hand, Mr Sanders was at the same level before his resignation at democrats convention
+  
+* Mr Trump contributors are under represented in California state (~15% of Mrs Clinton total)
+  + Main city represented are: San Diego, Fresno and Beverly Hills (even if under Mrs Clinton rate)
+  
+* When we compare contribution vs campaign timeline we can a real correlation between donations and candidates status (running, suspended or stopped)
+
+### VI) Reflection
+
+With this limited dataset, we cannot conclude on several questions:
+
+* How social, ethnic, religion or cultural environments impact the choice of candidate?
+  + We could add information about revenue for example
+  
+* How satisfaction about selected candidate impact the contribution especially after conventions?
+  + We could add a collumn in the dataframe with candidates polls
+
+
+
+
+
