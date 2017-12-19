@@ -138,7 +138,7 @@ The most interesting information we can get from this plot are:
 * As for the count of donations, the total amount is far greater for Mrs Clinto than others 
 * Low score for Mr Trump (lower than Mr Sanders) despite being elected in national elections at the end 
 
-#### b) Amount of donations percontributors for main candidates
+#### c) Amount of donations percontributors for main candidates
 
 in the next plot, we can see the distribution of donation amounts for main candidates. 
 
@@ -167,7 +167,7 @@ To answer this questions, we should have other informations like:
 * Revenue of contributors 
 * % satisfaction about the candidate for each contributors 
 
-#### c) Focus on finalists 
+#### d) Focus on finalists 
 
 The next table shows for both finalists the total sum and count of donations. 
 
@@ -426,7 +426,7 @@ In this analysis, we have highligthed that:
   
 * When we compare contribution vs campaign timeline we can a real correlation between donations and candidates status (running, suspended or stopped)
 
-### VI) Reflection
+### V) Reflection
 
 With this limited dataset, we cannot conclude on several questions:
 
