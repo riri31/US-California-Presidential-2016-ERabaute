@@ -414,6 +414,74 @@ We can notice that:
 * In opposite way, Los Angeles and San Francisco are under represented (inn comparison with city populations)
 * For Mrs Clinton, Biggest city as Los Angeles and San Franciso represents the main part of contributors. Oakland is big provider as well
 
+
+
+The following plots will illustrate the same information in a more graphical view.
+
+In a the first plot, we analyse Los Angeles map with number of conrtibutions.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+#Import data from CSV
+zip.code <- read.csv('us_postal_codes.csv',
+                          sep = ",",
+                          header = T)
+
+zip.code<-transform(zip.code,Zip.Code=as.character(Zip.Code))
+
+# Create dataframe for finalists grouped by candidates and emplyers
+
+data_campaign.byzip<-transform(data_campaign,
+                               contbr_zip=substr(as.character(contbr_zip),1,5))
+
+
+# Create dataframe for finalists grouped by candidates and emplyers
+data_campaign.byzip<- subset(data_campaign.byzip,cand_nm %in% finalists)  %>%
+  group_by(cand_nm, contbr_zip) %>%
+  summarise(sum=sum(contb_receipt_amt),
+            n=n()) %>%
+  arrange(-n)
+
+data_campaign.byzip.latlong <- data_campaign.byzip %>% full_join(zip.code, by = c("contbr_zip" = "Zip.Code" ))
+
+data_campaign.byzip.latlong.losangeles <-
+  subset(data_campaign.byzip.latlong,County=='Los Angeles' & cand_nm %in% finalists)
+
+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.losangeles,size = n/400,  color=cand_nm,show.legend=F, aes(alpha=I(0.5)))+
+  facet_wrap(~cand_nm)
+
+
+```
+
+We can notice that Mrs Clinton contributors are concentrated in nort east of the city in comparison with Mr Trump contributors that are equally spred all over the city.
+
+In the next plot, the same information are represented for San Diego that is the city where Mr Trump contributors were the most present (even if less numberous than Mrs Clinton's one)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data_campaign.byzip.latlong.sandiego <-
+  subset(data_campaign.byzip.latlong,County=='San Diego' & cand_nm %in% finalists)
+
+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.sandiego,size = n/400,  color=cand_nm, show.legend=F, aes(alpha=I(0.5)))+
+  facet_wrap(~cand_nm)
+```
+
+On the last map, we have represented all California State.
+
+Nothing special is to be noticed in this plot.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data_campaign.byzip.latlong.california <-
+  subset(data_campaign.byzip.latlong,State.Abbreviation=='CA' & cand_nm %in% finalists)
+
+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.california,size = n/8000,  color=cand_nm, show.legend=F,aes(alpha=I(0.1)))+
+  facet_wrap(~cand_nm)
+```
+
+
 #### e) Contributor employer for finalists
 
 I propose to look at contribution distribution per employers.
@@ -506,53 +574,14 @@ With this limited dataset, we cannot conclude on several questions:
 
 ```{r message=FALSE, warning=FALSE}
 
-#Import data from CSV
-zip.code <- read.csv('us_postal_codes.csv',
-                          sep = ",",
-                          header = T)
-
-zip.code<-transform(zip.code,Zip.Code=as.character(Zip.Code))
-
-# Create dataframe for finalists grouped by candidates and emplyers
-
-data_campaign.byzip<-transform(data_campaign,
-                               contbr_zip=substr(as.character(contbr_zip),1,5))
-
-
-# Create dataframe for finalists grouped by candidates and emplyers
-data_campaign.byzip<- subset(data_campaign.byzip,cand_nm %in% finalists)  %>%
-  group_by(cand_nm, contbr_zip) %>%
-  summarise(sum=sum(contb_receipt_amt),
-            n=n()) %>%
-  arrange(-n)
-
-data_campaign.byzip.latlong <- data_campaign.byzip %>% full_join(zip.code, by = c("contbr_zip" = "Zip.Code" ))
-
-data_campaign.byzip.latlong.losangeles <-
-  subset(data_campaign.byzip.latlong,County=='Los Angeles' & cand_nm %in% finalists)
-
-
-qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.losangeles,size = n/400,  color=cand_nm, aes(alpha=I(0.5)))+
-  facet_wrap(~cand_nm)
-
 ```
 
 ```{r message=FALSE, warning=FALSE}
-data_campaign.byzip.latlong.sandiego <-
-  subset(data_campaign.byzip.latlong,County=='San Diego' & cand_nm %in% finalists)
 
-
-qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.sandiego,size = n/400,  color=cand_nm, aes(alpha=I(0.5)))+
-  facet_wrap(~cand_nm)
 ```
 
 
 ```{r message=FALSE, warning=FALSE}
-data_campaign.byzip.latlong.california <-
-  subset(data_campaign.byzip.latlong,State.Abbreviation=='CA' & cand_nm %in% finalists)
 
-
-qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.california,size = n/8000,  color=cand_nm, aes(alpha=I(0.1)))+
-  facet_wrap(~cand_nm)
 ```
 
