@@ -22,6 +22,7 @@ This project is the last task validating Udacity explonary analysis MOOC.
 
 ### II) Data analysed
 
+#### a) Format and volume
 The data used for this analysis is a csv file downloaded from http://classic.fec.gov/  related from campaign Finance in Calfornia state.
 
 Data size: ~250 MB
@@ -71,6 +72,34 @@ elections_dates<- c('08-11-16','28-07-16','18-07-16','3-05-16','15-03-16')
 
 ```
 
+#### b) Summary of main variables
+
+* cand_nm -> Name of the candidates
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(data_campaign$cand_nm)
+```
+
+* contb_receipt_amt -> Amount of the contribution
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(data_campaign$contb_receipt_amt)
+```
+
+* contb_receipt_city  -> City where the contribution was done
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(data_campaign$contbr_city)
+```
+
+* contbr_employer -> employer of contribution
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(data_campaign$contbr_employer)
+```
+
+
+
 ### III) First observations
 
 #### a) Number of donators for each candidate
@@ -80,9 +109,6 @@ The first step is to assess the number of donators for each candidates.
 The Y axis is in log10 scale as there is a huge difference between all candidates (Mr Gilmore vs Mrs Clinton)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-
-table(data_campaign$cand_nm)
-
 
 ggplot(data = subset(data_campaign,!is.na(cand_nm)), aes(x=cand_nm))+
   geom_bar(aes(fill=cand_nm), size=1, show.legend = F)+
@@ -231,7 +257,7 @@ ggplot(data = subset(data_campaign,!is.na(cand_nm) & contb_receipt_amt>0 &
   scale_y_continuous(limits = c(0, 100))
 ```
 
-### IV) Final Plots and Summary
+### IV) Detailed plots
 
 
 #### a) Evolution of donations for main candiates vs election time line
@@ -241,7 +267,7 @@ In the next chart, we can superpose the amount of donations all along the electi
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # Display a line plot for contributions amount for main candidates
-ggplot(data = subset(data_campaign,
+p1<-ggplot(data = subset(data_campaign,
                      cand_nm %in% main_candidates & contb_receipt_amt>0),
                       aes(x=dmy(contb_receipt_dt,
                                 locale = "english_us"),
@@ -253,6 +279,8 @@ ggplot(data = subset(data_campaign,
                limits = c(dmy('01-05-15'), dmy('01-12-16')))+
   geom_vline(xintercept = dmy(elections_dates), show.legend = T)+
   facet_wrap(~ cand_nm, ncol = 1, scale='free_y')
+
+p1
 ```
 
 We can see that we have a clear correlation between donations and some milestone of the elections. 
@@ -397,13 +425,15 @@ top_city<-head(subset(data_campaign.bycity,
                n=30L)$contbr_city
 
 # Display occupation for finalists donators.
-ggplot(subset(data_campaign.bycity,
+p2<-ggplot(subset(data_campaign.bycity,
               cand_nm %in% finalists & contbr_city %in% top_city),
        aes(x=contbr_city, y=n, fill=contbr_city))+
   geom_bar(colour='black',  width = 1, stat = "identity",   show.legend = F)+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
   labs(y = "Count of contributions", x="")+
   facet_wrap(~cand_nm, ncol = 1, scales = "free_y")
+
+p2
 
 ```
 
@@ -449,10 +479,10 @@ data_campaign.byzip.latlong.losangeles <-
   subset(data_campaign.byzip.latlong,County=='Los Angeles' & cand_nm %in% finalists)
 
 
-qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.losangeles,size = n/400,  color=cand_nm,show.legend=F, aes(alpha=I(0.5)))+
+p3 <- qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.losangeles,size = n/400,  color=cand_nm,show.legend=F, aes(alpha=I(0.5)))+
   facet_wrap(~cand_nm)
 
-
+p3
 ```
 
 We can notice that Mrs Clinton contributors are concentrated in nort east of the city in comparison with Mr Trump contributors that are equally spred all over the city.
@@ -477,7 +507,7 @@ data_campaign.byzip.latlong.california <-
   subset(data_campaign.byzip.latlong,State.Abbreviation=='CA' & cand_nm %in% finalists)
 
 
-qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.california,size = n/8000,  color=cand_nm, show.legend=F,aes(alpha=I(0.1)))+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.california,size = n,  color=cand_nm, show.legend=F,aes(alpha=I(0.1)))+
   facet_wrap(~cand_nm)
 ```
 
@@ -542,27 +572,52 @@ df <- data.frame(
 
 ggplot(df, aes(x="", y=Sum, fill=Candidate))+
   geom_bar(width = 1, stat = "identity")+
-  coord_polar("y", start=0)
+  coord_polar("y", start=0)+
+  labs(title = "Total of contributions per candidates for GAFA")
   
 
 ```
 
 We can in the previous chart that GAFA contributors are for Mrs Clinton at an excessive rate (>99%)
 
-#### f) Summary
+### V) Summary
 
 In this analysis, we have highligthed that:
 
-* Mrs Clinton contributors are overepresented in California state in general
+* Mrs Clinton contributors are overepresented in California state in general and biggest city in particular (see following map)
   + especially in GAFA employers, biggest cities (SF, LA) and some occupation like attorneys or teachers
   + on the other hand, Mr Sanders was at the same level before his resignation at democrats convention
   
-* Mr Trump contributors are under represented in California state (~15% of Mrs Clinton total)
-  + Main city represented are: San Diego, Fresno and Beverly Hills (even if under Mrs Clinton rate)
-  
-* When we compare contribution vs campaign timeline we can a real correlation between donations and candidates status (running, suspended or stopped)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+p3
+```
 
-### V) Reflection
+
+
+* Mr Trump contributors are under represented in California state (~15% of Mrs Clinton total)
+  + Main city represented are: San Diego, Fresno and Beverly Hills (even if under Mrs Clinton rate) (see following plot)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+p2
+
+```
+
+  
+* When we compare contribution vs campaign timeline we can a real correlation between donations and candidates status (running, suspended or stopped) (see following plot)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+p1
+```
+
+
+
+'08-11-16': General US presidential elections
+'28-07-16': Democrats convention
+'18-07-16': Republicans convention
+'3-05-16': Mr Sanders stop
+'15-03-16' : Mr Rubio stop
+
+### VI) Reflection
 
 With this limited dataset, we cannot conclude on several questions:
 
@@ -572,16 +627,15 @@ With this limited dataset, we cannot conclude on several questions:
 * How satisfaction about selected candidate impact the contribution especially after conventions?
   + We could add a collumn in the dataframe with candidates polls
 
-```{r message=FALSE, warning=FALSE}
+Regarding struggles and successes, I can highlith:
 
-```
+* It was very difficult to use some R api, I find documentation about R library non exhaustive and sometime frustrating
 
-```{r message=FALSE, warning=FALSE}
+* Map visualization was quite easy to use
 
-```
+For me, R can be very powerful because we can display very interesting plots and charts in a short time frame. On the other hand, R becomes very difficult to use as soon as errors are raised as no complete documentations is available. Only help can come from Forums and it is why I did intensively once I got some big issues on my code.
 
 
-```{r message=FALSE, warning=FALSE}
 
-```
+
 
