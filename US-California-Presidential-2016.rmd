@@ -33,11 +33,16 @@ In order to accelerate computation for exploratory analysis, I'd sample all the 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggmap)
 library(ggplot2)
 library(RColorBrewer)
+library(GGally)
 
 #Import data from CSV
-data_campaign <- read.csv('P00000001-CA.csv',sep = ",",header = T,row.names = NULL)
+data_campaign <- read.csv('P00000001-CA.csv',
+                          sep = ",",
+                          header = T,
+                          row.names = NULL)
 #Data wrangling
 #data_campaign<-data_campaign[sample(1:nrow(data_campaign), 130000,replace=FALSE),] 
 names(data_campaign) <- names(data_campaign)[-1]
@@ -50,7 +55,10 @@ names(data_campaign)
 finalists<-c('Clinton, Hillary Rodham','Trump, Donald J.')
 
 #Subset the main candidates
-main_candidates<- c(finalists, c("Cruz, Rafael Edward 'Ted'","Rubio, Marco","Sanders, Bernard"))
+main_candidates<- c(finalists, c(
+  "Cruz, Rafael Edward 'Ted'",
+  "Rubio, Marco",
+  "Sanders, Bernard"))
 
 #Highlight some election dates
 #'08-11-16': General US presidential elections
@@ -79,6 +87,7 @@ table(data_campaign$cand_nm)
 ggplot(data = subset(data_campaign,!is.na(cand_nm)), aes(x=cand_nm))+
   geom_bar(aes(fill=cand_nm), size=1, show.legend = F)+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  labs(y = "Count of contributions", x="Candidates")+
   scale_y_log10()
   
 ```
@@ -98,13 +107,20 @@ The next scatter plot shows all donations for each candidats all along the campa
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(lubridate)
 
-ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"),y=contb_receipt_amt))+
+ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0),
+       aes(x=dmy(contb_receipt_dt, locale = "english_us"),y=contb_receipt_amt))+
   geom_jitter(alpha=1/4, position = 'identity', aes(color=cand_nm), shape=19)+
   scale_y_continuous(limits = c(0, 300))+
-  theme(axis.text.x=element_text(angle=90,vjust = 0))+
-  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-04-15'), NA))+
+  theme(axis.text.x=element_text(angle=90,vjust = 0))+ 
+  labs(y = "Amount of contributions ($)", x="Dates")+
+  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y",
+               limits = c(dmy('01-04-15'), NA))+
   geom_vline(xintercept = dmy(elections_dates), show.legend = T)
+  
 ```
+
+
+
 Elections time line:
 
 * 08-11-16: General US presidential elections, 
@@ -126,9 +142,14 @@ On the next plot, I focused on the total amount of donations for the main candid
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(data = subset(data_campaign,(cand_nm %in% main_candidates ) & contb_receipt_amt>1 & !is.na(contb_receipt_amt)), aes(x=cand_nm,y=contb_receipt_amt))+
+ggplot(data = subset(data_campaign,
+                     (cand_nm %in% main_candidates ) &
+                       contb_receipt_amt>1 &
+                       !is.na(contb_receipt_amt)),
+       aes(x=cand_nm,y=contb_receipt_amt))+
   geom_bar(stat='identity',aes(fill=cand_nm), size=1)+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  labs(y = "Total amount of contributions ($)", x="Canditates")+
   scale_y_continuous()
 
 ```
@@ -144,9 +165,12 @@ in the next plot, we can see the distribution of donation amounts for main candi
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=cand_nm, y=contb_receipt_amt))+
+ggplot(data = subset(data_campaign,
+                     cand_nm %in% main_candidates & contb_receipt_amt>0),
+                      aes(x=cand_nm, y=contb_receipt_amt))+
   geom_boxplot(aes(fill=cand_nm))+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  labs(y = "Contributions ($)", x="Canditates")+
   scale_y_continuous(limits = c(0, 150))
 
 
@@ -198,9 +222,12 @@ The next box plot confirms that mean donations are higher for Mr Trump than Mrs 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Display a scatter plot for contributions amount for both finalists
-ggplot(data = subset(data_campaign,!is.na(cand_nm) & contb_receipt_amt>0 & (cand_nm == 'Trump, Donald J.' | cand_nm == 'Clinton, Hillary Rodham')), aes(x=cand_nm, y=contb_receipt_amt))+
+ggplot(data = subset(data_campaign,!is.na(cand_nm) & contb_receipt_amt>0 &
+                       (cand_nm == 'Trump, Donald J.' | cand_nm == 'Clinton, Hillary Rodham')),
+                        aes(x=cand_nm, y=contb_receipt_amt))+
   geom_boxplot(aes(fill=cand_nm))+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  labs(y = "Total amount of contributions ($)", x="Canditates")+
   scale_y_continuous(limits = c(0, 100))
 ```
 
@@ -214,10 +241,16 @@ In the next chart, we can superpose the amount of donations all along the electi
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # Display a line plot for contributions amount for main candidates
-ggplot(data = subset(data_campaign,cand_nm %in% main_candidates & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"), y=contb_receipt_amt))+
+ggplot(data = subset(data_campaign,
+                     cand_nm %in% main_candidates & contb_receipt_amt>0),
+                      aes(x=dmy(contb_receipt_dt,
+                                locale = "english_us"),
+                          y=contb_receipt_amt))+
   geom_bar(stat='identity',show.legend = FALSE, aes(color=cand_nm))+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
-  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-05-15'), dmy('01-12-16')))+
+  labs(y = "Total amount of contributions ($)", x="Dates")+
+  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y",
+               limits = c(dmy('01-05-15'), dmy('01-12-16')))+
   geom_vline(xintercept = dmy(elections_dates), show.legend = T)+
   facet_wrap(~ cand_nm, ncol = 1, scale='free_y')
 ```
@@ -235,10 +268,14 @@ The same plot focused for finalists that confirm last analysis.
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # Same line plot for both finalists
-ggplot(data = subset(data_campaign,cand_nm %in% finalists & contb_receipt_amt>0), aes(x=dmy(contb_receipt_dt, locale = "english_us"), y=contb_receipt_amt))+
+ggplot(data = subset(data_campaign,cand_nm %in% finalists & contb_receipt_amt>0),
+       aes(x=dmy(contb_receipt_dt, locale = "english_us"),
+           y=contb_receipt_amt))+
   geom_bar(stat='identity',aes(color=cand_nm, fill=cand_nm))+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
-  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y", limits = c(dmy('01-04-15'), c(dmy('01-12-16'))))+
+  labs(y = "Total amount of contributions ($)", x="Dates")+
+  scale_x_date(date_breaks = "2 month" ,date_labels = "%b-%y",
+               limits = c(dmy('01-04-15'), c(dmy('01-12-16'))))+
   geom_vline(xintercept = dmy(elections_dates))+
   facet_wrap(~cand_nm, ncol = 1, scale='free_y')
 
@@ -258,7 +295,9 @@ data_campaign.bycategory<- subset(data_campaign,cand_nm %in% finalists)  %>%
   arrange(-n)
 
 # Select TOP 13 of occupations
-top_category<-head(subset(data_campaign.bycategory, cand_nm %in% finalists), n=13L)$contbr_occupation
+top_category<-head(subset(data_campaign.bycategory,
+                          cand_nm %in% finalists),
+                   n=13L)$contbr_occupation
 
 # Remove outliers
 top_category<- top_category[top_category!="INFORMATION REQUESTED"]
@@ -266,18 +305,27 @@ top_category<- top_category[top_category!=""]
 top_category<- top_category[!is.na(top_category)]
 
 # Change occupation to 'OTHER' if not part of TOP 13
-data_campaign.bycategory<-transform(data_campaign.bycategory, contbr_occupation_new= ifelse(contbr_occupation %in% top_category,as.character(contbr_occupation),as.character('OTHER')))
+data_campaign.bycategory<-transform(data_campaign.bycategory,
+                                    contbr_occupation_new= 
+                                      ifelse(contbr_occupation %in% top_category,
+                                            as.character(contbr_occupation),as.character('OTHER')))
 
 # Compute ratio field in the new data frame
-data_campaign.bycategory<-transform(data_campaign.bycategory, ratio= ifelse(cand_nm=='Clinton, Hillary Rodham', n/donations_DT['Clinton, Hillary Rodham', 'n'], n/donations_DT['Trump, Donald J.', 'n']))
+data_campaign.bycategory<-transform(data_campaign.bycategory,
+                                    ratio= ifelse(cand_nm=='Clinton, Hillary Rodham',
+                                    n/donations_DT['Clinton, Hillary Rodham', 'n'],
+                                    n/donations_DT['Trump, Donald J.', 'n']))
 
 # Plot ratio of contributions for both finalits
 ggplot(subset(data_campaign.bycategory, cand_nm %in% finalists), aes(x="", y=ratio, fill=contbr_occupation_new))+
   geom_bar(width = 1, stat = "identity")+
   facet_wrap(~cand_nm, ncol = 2)+
+  labs(y = "Ratio", x="")+
   scale_color_brewer(type = 'div',
-                     guide = guide_legend(title = 'contbr_occupation', reverse = T,
-                                          override.aes = list(alpha = 1, size = 1)))
+                     guide = guide_legend(
+                       title = 'contbr_occupation',
+                       reverse = T,
+                       override.aes = list(alpha = 1, size = 1)))
 
 ```
 
@@ -291,10 +339,12 @@ The same information is displayed in the following plot.
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # Display occupation for finalists donators.
-ggplot(subset(data_campaign.bycategory, cand_nm %in% finalists), aes(x=contbr_occupation_new, y=ratio))+
+ggplot(subset(data_campaign.bycategory, cand_nm %in% finalists),
+       aes(x=contbr_occupation_new, y=ratio))+
   geom_bar(width = 1, stat = "identity",  aes(fill=contbr_occupation_new), show.legend = F)+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
-  facet_wrap(~cand_nm, ncol = 1, scale='free_y')
+  facet_wrap(~cand_nm, ncol = 1, scale='free_y')+
+  labs(y = "Ratio", x="")
 
 ```
 
@@ -308,7 +358,8 @@ TOP10_CLINTON <- head(subset(data_campaign.bycategory, cand_nm=='Clinton, Hillar
 TOP10_CLINTON<-TOP10_CLINTON[TOP10_CLINTON!="INFORMATION REQUESTED"]
 
 # TOP 10 contributors occupation for Clinton
-TOP10_TRUMP <- head(subset(data_campaign.bycategory, cand_nm=='Trump, Donald J.'), n=11L)$contbr_occupation
+TOP10_TRUMP <- head(subset(data_campaign.bycategory, cand_nm=='Trump, Donald J.'),
+                    n=11L)$contbr_occupation
 # remove outlier
 TOP10_TRUMP<-TOP10_TRUMP[TOP10_TRUMP!="INFORMATION REQUESTED"]
 
@@ -341,12 +392,17 @@ data_campaign.bycity<- subset(data_campaign,cand_nm %in% finalists)  %>%
   arrange(-n)
 
 # Select TOP 20 of occupations
-top_city<-head(subset(data_campaign.bycity, cand_nm %in% finalists), n=30L)$contbr_city
+top_city<-head(subset(data_campaign.bycity,
+                      cand_nm %in% finalists),
+               n=30L)$contbr_city
 
 # Display occupation for finalists donators.
-ggplot(subset(data_campaign.bycity, cand_nm %in% finalists & contbr_city %in% top_city), aes(x=contbr_city, y=n, fill=contbr_city))+
+ggplot(subset(data_campaign.bycity,
+              cand_nm %in% finalists & contbr_city %in% top_city),
+       aes(x=contbr_city, y=n, fill=contbr_city))+
   geom_bar(colour='black',  width = 1, stat = "identity",   show.legend = F)+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  labs(y = "Count of contributions", x="")+
   facet_wrap(~cand_nm, ncol = 1, scales = "free_y")
 
 ```
@@ -371,16 +427,24 @@ data_campaign.byemployer<- subset(data_campaign,cand_nm %in% finalists)  %>%
             n=n()) %>%
   arrange(-n)
 
-TOP_EMPLOYER<-head(subset(data_campaign.byemployer, cand_nm %in% finalists), n=30L)$contbr_employer
+# List the TOP 30 of employer
+TOP_EMPLOYER<-head(subset(data_campaign.byemployer, cand_nm %in% finalists),
+                   n=30L)$contbr_employer
+
+#List of empoyer outliers
 OUTLIERS_EMPLOYER<-c('N/A','','RETIRED','DISABLED','HOMEMAKER','SELF-EMPLOYED','INFORMATION REQUESTED','NOT EMPLOYED','SELF EMPLOYED','NONE' )
 
 #Remove outliers
 TOP_EMPLOYER<-TOP_EMPLOYER[!TOP_EMPLOYER %in% OUTLIERS_EMPLOYER]
 
 # Display employers for finalists donators.
-ggplot(subset(data_campaign.byemployer, cand_nm %in% finalists & contbr_employer %in% TOP_EMPLOYER), aes(x=contbr_employer, y=n, fill=contbr_employer))+
-  geom_bar(colour='black',  width = 1, stat = "identity",   show.legend = F)+
+ggplot(subset(data_campaign.byemployer,
+              cand_nm %in% finalists & contbr_employer %in% TOP_EMPLOYER),
+       aes(x=contbr_employer,
+           y=n, fill=contbr_employer))+
+  geom_bar(colour='black',  width = 1, stat = "identity", show.legend = F)+
   theme(axis.text.x=element_text(angle=90,vjust = 0))+
+  labs(y = "Count of contributions", x="")+
   facet_wrap(~cand_nm, ncol = 1, scales = "free_y")
 
 
@@ -396,8 +460,12 @@ GAFA <-c('GOOGLE', 'FACEBOOK', 'APPLE INC.')
 
 # Display employers for finalists donators.
 
-Total_sum_GAFA_CLINTON<-sum(subset(data_campaign.byemployer, cand_nm== "Clinton, Hillary Rodham" & contbr_employer %in% GAFA )['sum'])
-Total_sum_GAFA_TRUMP<-sum(subset(data_campaign.byemployer, cand_nm== "Trump, Donald J." & contbr_employer %in% GAFA )['sum'])
+Total_sum_GAFA_CLINTON<-sum(subset(data_campaign.byemployer,
+                                   cand_nm== "Clinton, Hillary Rodham" &
+                                     contbr_employer %in% GAFA )['sum'])
+Total_sum_GAFA_TRUMP<-sum(subset(data_campaign.byemployer,
+                                 cand_nm== "Trump, Donald J." &
+                                   contbr_employer %in% GAFA )['sum'])
 
 df <- data.frame(
   Candidate = c("Clinton, Hillary Rodham", "Trump, Donald J."),
@@ -436,7 +504,55 @@ With this limited dataset, we cannot conclude on several questions:
 * How satisfaction about selected candidate impact the contribution especially after conventions?
   + We could add a collumn in the dataframe with candidates polls
 
+```{r message=FALSE, warning=FALSE}
+
+#Import data from CSV
+zip.code <- read.csv('us_postal_codes.csv',
+                          sep = ",",
+                          header = T)
+
+zip.code<-transform(zip.code,Zip.Code=as.character(Zip.Code))
+
+# Create dataframe for finalists grouped by candidates and emplyers
+
+data_campaign.byzip<-transform(data_campaign,
+                               contbr_zip=substr(as.character(contbr_zip),1,5))
 
 
+# Create dataframe for finalists grouped by candidates and emplyers
+data_campaign.byzip<- subset(data_campaign.byzip,cand_nm %in% finalists)  %>%
+  group_by(cand_nm, contbr_zip) %>%
+  summarise(sum=sum(contb_receipt_amt),
+            n=n()) %>%
+  arrange(-n)
 
+data_campaign.byzip.latlong <- data_campaign.byzip %>% full_join(zip.code, by = c("contbr_zip" = "Zip.Code" ))
+
+data_campaign.byzip.latlong.losangeles <-
+  subset(data_campaign.byzip.latlong,County=='Los Angeles' & cand_nm %in% finalists)
+
+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.losangeles,size = n/400,  color=cand_nm, aes(alpha=I(0.5)))+
+  facet_wrap(~cand_nm)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+data_campaign.byzip.latlong.sandiego <-
+  subset(data_campaign.byzip.latlong,County=='San Diego' & cand_nm %in% finalists)
+
+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.sandiego,size = n/400,  color=cand_nm, aes(alpha=I(0.5)))+
+  facet_wrap(~cand_nm)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+data_campaign.byzip.latlong.california <-
+  subset(data_campaign.byzip.latlong,State.Abbreviation=='CA' & cand_nm %in% finalists)
+
+
+qmplot(Longitude, Latitude, data = data_campaign.byzip.latlong.california,size = n/8000,  color=cand_nm, aes(alpha=I(0.1)))+
+  facet_wrap(~cand_nm)
+```
 
