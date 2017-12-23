@@ -74,6 +74,25 @@ elections_dates<- c('08-11-16','28-07-16','18-07-16','3-05-16','15-03-16')
 
 #### b) Summary of main variables
 
+* contb_receipt_dt -> date of contrubtion
+
+There are peaks:
+- first one during primairs
+- second one at the moment of conventions (republicans and democrats)
+- The last one at the moment of general elections
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=data_campaign, aes(x=dmy(contb_receipt_dt)))+
+  geom_histogram(color='black', fill='blue')+
+  scale_x_date(limits = c(dmy('01-06-15'), dmy('12-12-16')))+
+  geom_vline(xintercept = dmy(elections_dates), color='red', show.legend = T)+
+  labs(x="Amount of contributions", y="Number of contributions")
+```
+
+
+
+
 * cand_nm -> Name of the candidates
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -85,6 +104,20 @@ summary(data_campaign$cand_nm)
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 summary(data_campaign$contb_receipt_amt)
 ```
+
+The same variable with an histogram -> Looks like a positive skewed distribution
+
+We can see that peaks are for rounded amount ('50', '100', '150', '200')
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rounded_values=c('50', '75', '100', '150', '200')
+
+ggplot(data=data_campaign, aes(x=contb_receipt_amt))+
+  geom_histogram(color='black', fill='blue')+
+  scale_x_continuous(limits = c(0, 400))+
+  labs(x="Amount of contributions", y="Number of contributions")
+```
+
 
 * contb_receipt_city  -> City where the contribution was done
 
